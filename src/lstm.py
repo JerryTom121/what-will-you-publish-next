@@ -145,14 +145,14 @@ class LSTM():
                     sys.stdout.flush()
                     #x2[:,0:-1]=x2[:,1:]
                     #x2[:,-1]=x[0,step]
-                    state,_ = session.run([self._final_state,tf.no_op()],{self._input_data: [[x[step]]],
+                    state,_ = session.run([self._final_state,tf.no_op()],{self._input_data: [x[step]],
                                                       self._initial_state: state})
                 x=x[-1]
                 for step in range(self.num_sampling_steps):
                     #print "step:",step
                     #print x
                     out,state, _ = session.run([self.logits,self._final_state, tf.no_op()],
-                                                     {self._input_data:  [[x]],
+                                                     {self._input_data:  [x],
                                                       self._initial_state: state})
                     #out[-1][0]=0
                     
