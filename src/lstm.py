@@ -89,8 +89,8 @@ class LSTM():
         self.softmax_w = tf.get_variable("softmax_w", [self.lstm_size, self.vocab_size])
         self.softmax_b = tf.get_variable("softmax_b", [self.vocab_size])
         self.logits = tf.matmul(self.output, self.softmax_w) + self.softmax_b
-        print  "self.states.get_shape():",self.states.get_shape()
-        print  "tf.shape(self.states)",tf.shape(self.states)
+        #print  "self.states.get_shape():",self.states.get_shape()
+        #print  "tf.shape(self.states)",tf.shape(self.states)
         self._final_state = self.states
         self.saver = tf.train.Saver()
         
