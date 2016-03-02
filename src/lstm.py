@@ -89,8 +89,8 @@ class LSTM():
         self.softmax_w = tf.get_variable("softmax_w", [self.lstm_size, self.vocab_size])
         self.softmax_b = tf.get_variable("softmax_b", [self.vocab_size])
         self.logits = tf.matmul(self.output, self.softmax_w) + self.softmax_b
-        print  "self.states.get_shape():",self.states.get_shape()
-        print  "tf.shape(self.states)",tf.shape(self.states)
+        #print  "self.states.get_shape():",self.states.get_shape()
+        #print  "tf.shape(self.states)",tf.shape(self.states)
         self._final_state = self.states
         self.saver = tf.train.Saver()
         
@@ -99,39 +99,7 @@ class LSTM():
             del self.data
             
         print "done"
-    def create_model_for_sampling(self):
-        print "Setting up model",
-        sys.stdout.flush()
-        # placeholders for data + targets
-        self._input_data = tf.placeholder(tf.int32, shape=(self.batch_size, self.num_steps))
-        self._targets = tf.placeholder(tf.int32, [self.batch_size, self.num_steps])
 
-        # set up lookup function
-        self.embedding = tf.constant(self.saved_embedding,name="embedding")
-        self.inputs = tf.nn.embedding_lookup(self.embedding, self._input_data)
-        # lstm model
-        self.lstm_cell = rnn_cell.BasicLSTMCell(self.lstm_size)
-        self.cell = rnn_cell.MultiRNNCell([self.lstm_cell] * self.num_layers)
-
-
-        self._initial_state = self.cell.zero_state(self.batch_size, tf.float32)
-
-        from tensorflow.models.rnn import rnn
-        self.inputs = [tf.squeeze(input_, [1]) for input_ in tf.split(1, self.num_steps, self.inputs)]
-        self.outputs, self.states = rnn.rnn(self.cell, self.inputs, initial_state=self._initial_state)
-
-        self.output = tf.reshape(tf.concat(1, self.outputs), [-1, self.lstm_size])
-        self.softmax_w = tf.get_variable("softmax_w", [self.lstm_size, self.vocab_size])
-        self.softmax_b = tf.get_variable("softmax_b", [self.vocab_size])
-        self.logits = tf.matmul(self.output, self.softmax_w) + self.softmax_b
-        self._final_state = self.states
-        self.saver = tf.train.Saver()
-        
-        #delete data to save memory if network is used for sampling only
-        if self.only_for_sampling:
-            del self.data
-            
-        print "done"
     
     # sample a trainied model, given some prime text (and, potentially, a temperature for the softmax)
     def sample_model(self,prime_text=None,sampling_temp=1.0):
