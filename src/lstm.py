@@ -46,7 +46,11 @@ class LSTM():
             self.batch_size=1
         else:
             self.batch_size=batch_size
-        self.num_steps=num_steps
+        if sample_model:
+            self.num_steps=1
+            self.num_steps_actual=num_steps
+        else:
+            self.num_steps=num_steps
         self.num_layers=2
         self.max_epochs=10
         self.lr_decay=0.8
@@ -85,7 +89,42 @@ class LSTM():
         self.softmax_w = tf.get_variable("softmax_w", [self.lstm_size, self.vocab_size])
         self.softmax_b = tf.get_variable("softmax_b", [self.vocab_size])
         self.logits = tf.matmul(self.output, self.softmax_w) + self.softmax_b
-        self._final_state = self.states[-1]
+        print  "self.states.get_shape():",self.states.get_shape()
+        print  "tf.shape(self.states)",tf.shape(self.states)
+        self._final_state = self.states
+        self.saver = tf.train.Saver()
+        
+        #delete data to save memory if network is used for sampling only
+        if self.only_for_sampling:
+            del self.data
+            
+        print "done"
+    def create_model_for_sampling(self):
+        print "Setting up model",
+        sys.stdout.flush()
+        # placeholders for data + targets
+        self._input_data = tf.placeholder(tf.int32, shape=(self.batch_size, self.num_steps))
+        self._targets = tf.placeholder(tf.int32, [self.batch_size, self.num_steps])
+
+        # set up lookup function
+        self.embedding = tf.constant(self.saved_embedding,name="embedding")
+        self.inputs = tf.nn.embedding_lookup(self.embedding, self._input_data)
+        # lstm model
+        self.lstm_cell = rnn_cell.BasicLSTMCell(self.lstm_size)
+        self.cell = rnn_cell.MultiRNNCell([self.lstm_cell] * self.num_layers)
+
+
+        self._initial_state = self.cell.zero_state(self.batch_size, tf.float32)
+
+        from tensorflow.models.rnn import rnn
+        self.inputs = [tf.squeeze(input_, [1]) for input_ in tf.split(1, self.num_steps, self.inputs)]
+        self.outputs, self.states = rnn.rnn(self.cell, self.inputs, initial_state=self._initial_state)
+
+        self.output = tf.reshape(tf.concat(1, self.outputs), [-1, self.lstm_size])
+        self.softmax_w = tf.get_variable("softmax_w", [self.lstm_size, self.vocab_size])
+        self.softmax_b = tf.get_variable("softmax_b", [self.vocab_size])
+        self.logits = tf.matmul(self.output, self.softmax_w) + self.softmax_b
+        self._final_state = self.states
         self.saver = tf.train.Saver()
         
         #delete data to save memory if network is used for sampling only
@@ -107,32 +146,45 @@ class LSTM():
                 #print "_------------------"
                 tmp_start=time.time()
                 self.saver.restore(session, self.model_path+"/lstm-model.ckpt")
-                state = self._initial_state.eval()
+                initial_state = self._initial_state.eval()
                 print "loading took %f seconds"%(time.time()-tmp_start)
                 # set initial x (self.batch_size is 1)
                 if prime_text==None:
-                    x=np.random.randint(0,self.vocab_size,size=(self.batch_size, self.num_steps))
+                    x=np.random.randint(0,self.vocab_size,size=self.num_steps_actual)
                 else:
-                    x=np.zeros([self.batch_size, self.num_steps],dtype=np.int32)
+                    x=np.zeros(self.num_steps_actual,dtype=np.int32)
                     split_text=prime_text.split()
                     #print split_text
-                    for i in range(self.num_steps):
+                    for i in range(self.num_steps_actual):
                         txt=split_text[i%len(split_text)]
                         if txt in self.dictionary.keys():
-                            x[0,i]=self.dictionary[txt]
+                            x[i]=self.dictionary[txt]
                         else:
-                            x[0,i]=0
-                print "priming:", 
-                for i in range(self.num_steps):
-                    print self.reverse_dictionary[x[0,i]],
-                    prime_words.append(self.reverse_dictionary[x[0,i]])
+                            x[i]=0
+                print "priming text:", 
+                for i in range(self.num_steps_actual):
+                    print self.reverse_dictionary[x[i]],
+                    prime_words.append(self.reverse_dictionary[x[i]])
                 delayed_linebreak=False
                 print "...\n"
+                
+                # get initial primed state
+                #x2=np.zeros(x.shape)
+                print "priming..."
+                state=initial_state
+                for step in range(self.num_steps_actual-1):
+                    print step,
+                    sys.stdout.flush()
+                    #x2[:,0:-1]=x2[:,1:]
+                    #x2[:,-1]=x[0,step]
+                    state,_ = session.run([self._final_state,tf.no_op()],{self._input_data: [[x[step]]],
+                                                      self._initial_state: state})
+                x=x[-1]
                 for step in range(self.num_sampling_steps):
                     #print "step:",step
                     #print x
                     out,state, _ = session.run([self.logits,self._final_state, tf.no_op()],
-                                                     {self._input_data: x,
+                                                     {self._input_data:  [[x]],
                                                       self._initial_state: state})
                     #out[-1][0]=0
                     
@@ -147,8 +199,9 @@ class LSTM():
                     y=np.argmax(np.random.multinomial(1,probs))
                     output_probs.append(probs[y])    
                     
-                    x[:,0:-1]=x[:,1:]
-                    x[:,-1]=y
+                    #x[:,0:-1]=x[:,1:]
+                    #x[:,-1]=y
+                    x=y
                     
                     # retrieve the actual string
                     outstring=self.reverse_dictionary[y]
