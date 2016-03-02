@@ -89,8 +89,8 @@ class LSTM():
         self.softmax_w = tf.get_variable("softmax_w", [self.lstm_size, self.vocab_size])
         self.softmax_b = tf.get_variable("softmax_b", [self.vocab_size])
         self.logits = tf.matmul(self.output, self.softmax_w) + self.softmax_b
-        #print  "self.states.get_shape():",self.states.get_shape()
-        #print  "tf.shape(self.states)",tf.shape(self.states)
+        print  "self.states.get_shape():",self.states.get_shape()
+        print  "tf.shape(self.states)",tf.shape(self.states)
         self._final_state = self.states
         self.saver = tf.train.Saver()
         
@@ -99,7 +99,6 @@ class LSTM():
             del self.data
             
         print "done"
-
     
     # sample a trainied model, given some prime text (and, potentially, a temperature for the softmax)
     def sample_model(self,prime_text=None,sampling_temp=1.0):
@@ -118,21 +117,21 @@ class LSTM():
                 print "loading took %f seconds"%(time.time()-tmp_start)
                 # set initial x (self.batch_size is 1)
                 if prime_text==None:
-                    x=np.random.randint(0,self.vocab_size,size=self.num_steps_actual)
+                    x=np.random.randint(0,self.vocab_size,size=(self.batch_size, self.num_steps_actual))
                 else:
-                    x=np.zeros(self.num_steps_actual,dtype=np.int32)
+                    x=np.zeros([self.batch_size, self.num_steps_actual],dtype=np.int32)
                     split_text=prime_text.split()
                     #print split_text
                     for i in range(self.num_steps_actual):
                         txt=split_text[i%len(split_text)]
                         if txt in self.dictionary.keys():
-                            x[i]=self.dictionary[txt]
+                            x[0,i]=self.dictionary[txt]
                         else:
-                            x[i]=0
-                print "priming text:", 
+                            x[0,i]=0
+                print "priming:", 
                 for i in range(self.num_steps_actual):
-                    print self.reverse_dictionary[x[i]],
-                    prime_words.append(self.reverse_dictionary[x[i]])
+                    print self.reverse_dictionary[x[0,i]],
+                    prime_words.append(self.reverse_dictionary[x[0,i]])
                 delayed_linebreak=False
                 print "...\n"
                 
@@ -141,18 +140,17 @@ class LSTM():
                 print "priming..."
                 state=initial_state
                 for step in range(self.num_steps_actual-1):
-                    print step,
-                    sys.stdout.flush()
+                    print step
                     #x2[:,0:-1]=x2[:,1:]
                     #x2[:,-1]=x[0,step]
-                    state,_ = session.run([self._final_state,tf.no_op()],{self._input_data: [x[step]],
+                    state,_ = session.run([self._final_state,tf.no_op()],{self._input_data: [[x[0,step]]],
                                                       self._initial_state: state})
-                x=x[-1]
+                x=x[0,-1]
                 for step in range(self.num_sampling_steps):
                     #print "step:",step
                     #print x
                     out,state, _ = session.run([self.logits,self._final_state, tf.no_op()],
-                                                     {self._input_data:  [x],
+                                                     {self._input_data:  [[x]],
                                                       self._initial_state: state})
                     #out[-1][0]=0
                     
