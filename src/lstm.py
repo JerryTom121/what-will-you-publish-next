@@ -139,17 +139,15 @@ class LSTM():
                 #x2=np.zeros(x.shape)
                 print "priming..."
                 state=initial_state
+                _noop=tf.no_op()
                 for step in range(self.num_steps_actual-1):
-                    print step
-                    #x2[:,0:-1]=x2[:,1:]
-                    #x2[:,-1]=x[0,step]
-                    state,_ = session.run([self._final_state,tf.no_op()],{self._input_data: [[x[0,step]]],
+                    with tf.Graph().as_default():
+                        state,_ = session.run([self._final_state,_noop],{self._input_data: [[x[0,step]]],
                                                       self._initial_state: state})
                 x=x[0,-1]
                 for step in range(self.num_sampling_steps):
-                    #print "step:",step
-                    #print x
-                    out,state, _ = session.run([self.logits,self._final_state, tf.no_op()],
+                    with tf.Graph().as_default():
+                        out,state, _ = session.run([self.logits,self._final_state, _noop],
                                                      {self._input_data:  [[x]],
                                                       self._initial_state: state})
                     #out[-1][0]=0
