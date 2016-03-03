@@ -277,6 +277,7 @@ class LSTM():
                     if step % (epoch_size // 200) == 10:
                         tmp_start=time.time()
                         print "(saving...",
+                        sys.stdout.flush()
                         save_path = self.saver.save(session, self.model_path+"/lstm-model.ckpt")
                         f=open(self.model_path+"/lstm-model.info.pkl","w")
                         pickle.dump([i,step,costs,iters,time.time()-tmp_start],f)
