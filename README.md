@@ -43,8 +43,9 @@ However, it is nice to see what a model like this *can* do.
 On first glance, the paper titles actually look pretty good:
 
 ```
-“Vertical And Random Walks In Choice Finite Languages”
-“Model Checking The Equilibrium Problem: Systems, Dynamic Process Building And Business Process”
+"Vertical And Random Walks In Choice Finite Languages"
+"Model Checking The Equilibrium Problem: Systems, Dynamic Process Building And Business Process"
+"A Probabilistic Model Of Social Reading; In: International Journal Social Robotics"
 ```
 
 We see that
