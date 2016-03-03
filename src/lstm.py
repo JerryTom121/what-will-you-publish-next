@@ -228,12 +228,13 @@ class LSTM():
                 state = self._initial_state.eval()
                 print "restoring training state"
                 i_start,step_start,costs_start,iters_start,training_time=pickle.load(open(self.model_path+"/lstm-model.info.pkl"))
-                #print i_start,step_start
+                # (don't need training time any more, leaving it in form compatibility reasons)
+                print "restored model, will start at epoch",i_start,"at step",step_start
                 
                 
                 
             writer = tf.train.SummaryWriter("/tmp/lstm_log", session.graph_def)
-            
+            stats_interval=1000 # higher means more often
             # start the training loop
             for i in range(i_start,self.max_epochs):
                 print "epoch "+str(i)
@@ -247,12 +248,12 @@ class LSTM():
                 state = self._initial_state.eval()
                 for step, (x, y) in enumerate(reader.ptb_iterator(self.data, self.batch_size,
                                                                 self.num_steps)):
-                    if step<step_start or (step==step_start and step>0):
+                    if i==i_start and (step<step_start or (step==step_start and step>0)):
                         if step==0:
                             print "fast-forwarding...",
                             costs=costs_start
                             iters=iters_start
-                            start_time-=training_time
+                            #start_time-=training_time
                             iters_start=0
                         if step%100==0:
                             print ".",
@@ -264,20 +265,26 @@ class LSTM():
                                                   self._initial_state: state})
                     costs += cost
                     iters += self.num_steps
-
-                    if step % (epoch_size // 1000) == 10:
+                    
+                    stats_or_saved=False
+                    if step % (epoch_size // stats_interval) == 10:
                         print ("%.3f perplexity: %.3f speed: %.0f wps"%
                         (step * 1.0 / epoch_size, np.exp(costs / iters),
-                             iters * self.batch_size / (time.time() - start_time)))
+                             (self.num_steps*(epoch_size // stats_interval) * self.batch_size) / (time.time() - start_time))),
+                        start_time = time.time()
+                        stats_or_saved=True
                     # save the model and meta infos from time to time
                     if step % (epoch_size // 200) == 10:
                         tmp_start=time.time()
+                        print "(saving...",
                         save_path = self.saver.save(session, self.model_path+"/lstm-model.ckpt")
-                        
                         f=open(self.model_path+"/lstm-model.info.pkl","w")
                         pickle.dump([i,step,costs,iters,time.time()-tmp_start],f)
                         f.close()
-                
+                        print "ok)",
+                        stats_or_saved=True
+                    if stats_or_saved:
+                        print ""
 
 
 if __name__=="__main__":
