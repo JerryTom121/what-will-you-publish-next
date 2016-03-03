@@ -107,7 +107,7 @@ We use
 
 - Python for preprocessing
 - [Tensorflow](http://www.tensorflow.org) for the word2vec and LSTM/RNN models (in fact, we use some of the tensorflow tutorial code)
- (we used tensorflow 0.6, it seems that it does not work with tf 0.7, since they changed some indexing features)
+ (the last version of the lstm code works with tf 0.7.1, but not 0.6 - some indexing features changed)
 - Ubuntu 14.04
 - An Nvidia GTX 970 GPU for training the LSTM model
 
