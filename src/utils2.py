@@ -56,7 +56,6 @@ def journal_replace(string_in):
         ("Graph.","Graphics"),
         ("Imag.","Imaging"),
         ("Artif.","Artificial"),
-        ("Intell.","Intelligent"),
         ("Syst.","Systems"),
         ("Bull.","Bulletin"),
         ("Mag.","Magazine"),
