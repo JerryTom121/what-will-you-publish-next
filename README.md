@@ -36,7 +36,47 @@ Now, to find out what someone will publish next, we
 
 See below for more details!
 # 2. Fun facts
- TODO, some interesting results
+First of all, it is clear that the model cannot properly predict any future papers, or even get close. The underlying causal relationships are much more complex, with latent factors like interest or area of excellence, and chance plays a big role as well.
+
+However, it is nice to see what a model like this *can* do. 
+## Paper titles
+On first glance, the paper titles actually look pretty good:
+
+```
+“Vertical And Random Walks In Choice Finite Languages”
+“Model Checking The Equilibrium Problem: Systems, Dynamic Process Building And Business Process”
+```
+
+We see that
+ - it has learned a good language model. 
+ - the syntax is nearly perfect. It learns to sample paper titles of a reasonable length, separates titles and journal/conference titles with a semicolon, and almost always gets the order right
+ 
+## Languages
+The model has learned to separate English from other languages (such as German or French) which are in DBLB (although the majority of records is in English).
+ 
+```
+"Eine Zur Designing Der UNK In Einem Aus Sein Du Numeriques UNK"
+```
+
+Although this sentence is obviously garbage, the model is fairly confident that once non-English words occur, they are followed by other non-English words.
+
+## Match of title and journal/conference
+
+The choice of journal/conference is often pretty good!
+
+Paper title | Journal/Conference
+------------ | -------------
+Comments On Algorithms For General Automorphism Symmetric Eigenvalue Problems By Extension Of Weighted Homogeneity Norm|Computers And Mathematics With Application
+Detectors Of Human Auditory Cortex With Long-Term Memory Analysis|Neurocomputing
+Time Synchronization Error In Compressed Video Using Particle Vector Transform|Journal Of Digital Imaging
+Prediction Of Outcomes Stages Quantum Molecular Structural Similarity As An Example Using The Molecular Substructure Approach|Journal Of Chemical Information And Computer Sciences
+
+Maybe we should build a classification tool instead... Enter your title and it tells you where to publish.
+
+## How well are the predictions? 
+
+The best thing is to try it outfor yourself. You can clearly see that the papers the RNN fantasizes are strongly correlated with the priming you give to it (i.e., the previous papers of the author). This works best, if the papers in the primetext share a single topic. So usually, grad students or focused post docs get the best results. Priming the RNN with many different topics makes the results very blurred, and somewhat indistinguishable from other author's results. But, this might be true for the prime text as well :)
+
 # 3. How it is done
 Now let us look at some of the gory details (although we will remain pretty high-level here).
 
@@ -98,7 +138,7 @@ We can measure how good the network does its job by calculating the error it mak
 
 To **sample** new data from the model, we can now ask it to fantasize new outputs. We can "prime" the network by initializing its past state to something we want to, in this case, for example the letters "h" "o" "u" and "s". If the network has been trained on English words/texts it is very likely that it will deem "e" to be a probable next character, to write the word "house". Or it might sample an "i" and continue to write the word "housing".
 
-We use LSTM neurons, which are slightly more complicated in their inner workings, but enable the RNN to learn long-term relationships more easily.
+We use LSTM neurons, which are slightly more complicated in their inner workings, but enable the RNN to learn long-term relationships more easily. To find out more about LSTMs, look at this excellent [blog post on LSTMs](http://colah.github.io/posts/2015-08-Understanding-LSTMs/).
 
 Note that, in our example, we operate on words instead of letters. This makes the RNN pick up temporal relations that extend further into the "past" of the sequence (i.e., 10 words into the "past" is far more than 10 letters).
 
@@ -147,7 +187,7 @@ Finally, when the model is trained, we can sample from it
 ```bash
 python lstm.py -f word2vec-embedding.emb.pkl  -o <output_path> -l <time_steps> -s True -n <number_words> -p <prime_text>
 ```
-where the script expects to find the file `<output_path>/lstm-model.ckpt`, and the network will sample `<number_words>` words. `<prime_text>` is the text that you want your sample to be dependent on, i.e., the past publications of the author in question. For example, `<prime_text>` could be `the joy of cheesecake ; in: cooking heroes`. Note that the words of the prime should be present in the dicitionary that was created in the word2vec step (contained in the embedding file).
+where the script expects to find the file `<output_path>/lstm-model.ckpt`, and the network will sample `<number_words>` words. `<prime_text>` is the text that you want your sample to be dependent on, i.e., the past publications of the author in question. For example, `<prime_text>` could be `the joy of cheesecake ; in: cooking heroes`. Note that the words of the prime should be present in the dictionary that was created in the word2vec step (contained in the embedding file).
 
 You can also instantiate your own LSTM instance from the LSTM class in lstm.py, this will give you access to the sampled data and the underlying probabilities - the script just prints the data on the terminal.
 
