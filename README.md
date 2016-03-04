@@ -120,7 +120,7 @@ As for the years: This actually works fine, the model learns to sample papers in
 
 ## Word2vec
 [Word2vec](https://en.wikipedia.org/wiki/Word2vec) is a great technique for embedding words in high dimensional vectors. The underlying idea is that words stored in a dictionary are pretty unhandy when it comes to using them in models. The dictionaries are large (tens of thousands of words), and syntactic or semantic relationships between words are not properly represented in a dictionary. 
-Word2vec now calculates an *embedding*, that is, it changes the way the words are represented. Before, the are an index in a, afterwards, each word is represented by an n-dimensional vector of real numbers. Check out [this tutorial](https://www.tensorflow.org/versions/r0.7/tutorials/word2vec/index.html) on word2vec and embeddings to understand what is going on within the model (and witness some amazing properties of the embedding).
+Word2vec now calculates an *embedding*, that is, it changes the way the words are represented. Before, each word is just an index in a dictionary, afterwards, each word is represented by an n-dimensional vector of real numbers. Check out [this tutorial](https://www.tensorflow.org/versions/r0.7/tutorials/word2vec/index.html) on word2vec and embeddings to understand what is going on within the model (and witness some amazing properties of the embedding).
 ## RNNs
 Before we start, if you haven't read Andrej Karpathy's [great blog post](http://karpathy.github.io/2015/05/21/rnn-effectiveness/) about RNNs, you should definitly do so. It got me started on RNNs (although I really liked Ilya Sutskever's [RNN demo](http://www.cs.toronto.edu/~ilya/rnn.html) at the time).
 RNNs are machine learning models for sequences. Sequence learning is a very common task. You might want to predict the weather of tomorrow, given today's weather, predict the next letter of a text, given previous letters, or the next word of a sentence, given previous words.
@@ -192,3 +192,7 @@ where the script expects to find the file `<output_path>/lstm-model.ckpt`, and t
 
 You can also instantiate your own LSTM instance from the LSTM class in lstm.py, this will give you access to the sampled data and the underlying probabilities - the script just prints the data on the terminal.
 
+# Fine print
+what-will-you-publish-next is joint work of [Malte, Ann, and Franz from the University of Mainz](http://wi.bwl.uni-mainz.de). We hope you like it, let us know if you have comments, or find any bugs.
+
+*Note*: This software is provided "as is", without any warranties. It may frighten innocent kittens, cause your cellphone to explode, or provoke other horrible events that we can't forsee. We hope it is fun, nevertheless.
