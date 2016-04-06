@@ -147,7 +147,7 @@ class LSTM():
                 x=x[0,-1]
                 for step in range(self.num_sampling_steps):
                     with tf.Graph().as_default():
-                        out,state, _ = session.run([self.logits,self._final_state, _noop],
+                        out,new_state, _ = session.run([self.logits,self._final_state, _noop],
                                                      {self._input_data:  [[x]],
                                                       self._initial_state: state})
                     #out[-1][0]=0
@@ -183,8 +183,11 @@ class LSTM():
                         delayed_linebreak=True
                     """
                     sys.stdout.flush()
-                    #print state
-                    #print state[-1]
+                    # update state
+                    old_state = state
+                    for i in range(len(state)-1):
+                        state[i]=old_state[i+1]
+                    state[-1]=new_state[-1]
                 print "\ndone"
         return output_words,output_probs,prime_words
     
